@@ -10,7 +10,6 @@ export const authService = {
       .eq('id', userId)
       .single();
 
-    // If trigger is still running, retry once after 500ms
     if ((error || !data) && retryCount < 1) {
       await new Promise(resolve => setTimeout(resolve, 500));
       return authService.getProfile(userId, retryCount + 1);
@@ -18,11 +17,20 @@ export const authService = {
 
     if (!data) return null;
 
+    // Record activity
+    await supabase.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', userId);
+
+    // Fix: Ensure all mandatory User properties are provided
     return {
       id: data.id,
       email: data.email,
       isSubscribed: data.is_subscribed,
-      videosProcessed: data.videos_processed
+      videosProcessed: data.videos_processed,
+      isAdmin: data.role === 'admin',
+      lastActive: data.last_active,
+      signupSource: data.signup_source,
+      accountStatus: data.account_status || 'active',
+      planType: data.is_subscribed ? 'pro' : 'free'
     };
   },
 
@@ -36,7 +44,6 @@ export const authService = {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (!data.user) throw new Error('No user data returned');
-
     const profile = await authService.getProfile(data.user.id);
     if (!profile) throw new Error('Profile not found');
     return profile;
@@ -46,9 +53,6 @@ export const authService = {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
     if (!data.user) throw new Error('Signup failed');
-
-    // We no longer manually insert here because the SQL trigger handles it.
-    // We just fetch the profile that the trigger created.
     const profile = await authService.getProfile(data.user.id);
     if (!profile) throw new Error('Profile initialization timed out');
     return profile;

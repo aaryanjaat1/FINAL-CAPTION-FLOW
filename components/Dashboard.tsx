@@ -41,10 +41,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
          
          <nav className="space-y-3 flex-grow">
             {[
-              { label: 'Home', icon: '🏠', active: true },
-              { label: 'My Projects', icon: '📂' },
-              { label: 'Templates', icon: '🎭' },
-              { label: 'Settings', icon: '⚙️' }
+              { label: 'Home', icon: '🏠', active: true, route: AppRoute.DASHBOARD },
+              { label: 'My Projects', icon: '📂', route: AppRoute.DASHBOARD },
+              { label: 'Templates', icon: '🎭', route: AppRoute.DASHBOARD },
+              { label: 'Settings', icon: '⚙️', route: AppRoute.DASHBOARD }
             ].map(item => (
               <button 
                 key={item.label}
@@ -53,6 +53,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
                 <span className="text-lg">{item.icon}</span> {item.label}
               </button>
             ))}
+
+            {user.isAdmin && (
+               <button 
+                 onClick={() => onNavigate(AppRoute.ADMIN)}
+                 className="w-full text-left px-5 py-3.5 rounded-2xl flex items-center gap-4 font-black text-[11px] uppercase tracking-widest transition-all text-red-500 hover:bg-red-600/10 border border-transparent hover:border-red-600/20 mt-8"
+               >
+                 <span className="text-lg">🛡️</span> SECURE ADMIN
+               </button>
+            )}
          </nav>
 
          <div className="space-y-6">

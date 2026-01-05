@@ -5,6 +5,7 @@ import { LandingPage } from './components/LandingPage';
 import { Dashboard } from './components/Dashboard';
 import { Editor } from './components/Editor';
 import { AuthView } from './components/AuthView';
+import { AdminDashboard } from './components/AdminDashboard';
 import { authService } from './services/authService';
 import { supabase } from './lib/supabase';
 
@@ -20,6 +21,7 @@ const App: React.FC = () => {
         const currentUser = await authService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
+          // Auto-direct based on path or default to dashboard
           setRoute(AppRoute.DASHBOARD);
         }
       } catch (err) {
@@ -101,6 +103,15 @@ const App: React.FC = () => {
           onExport={handleProjectComplete} 
         />
       ) : <AuthView onAuthSuccess={(u) => { setUser(u); setRoute(AppRoute.DASHBOARD); }} onBack={() => setRoute(AppRoute.LANDING)} />;
+
+    case AppRoute.ADMIN:
+      // Only allow true admins
+      return user?.isAdmin ? (
+        <AdminDashboard 
+          user={user} 
+          onBack={() => setRoute(AppRoute.DASHBOARD)} 
+        />
+      ) : <LandingPage onStart={() => setRoute(AppRoute.AUTH)} />;
 
     default:
       return <LandingPage onStart={() => setRoute(AppRoute.AUTH)} />;

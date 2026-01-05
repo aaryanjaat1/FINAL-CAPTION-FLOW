@@ -4,6 +4,11 @@ export interface User {
   email: string;
   isSubscribed: boolean;
   videosProcessed: number;
+  isAdmin: boolean;
+  lastActive?: string;
+  signupSource?: string;
+  accountStatus: 'active' | 'banned' | 'suspended';
+  planType: 'free' | 'pro' | 'enterprise';
 }
 
 export interface Caption {
@@ -47,7 +52,8 @@ export enum AppRoute {
   LANDING = 'landing',
   DASHBOARD = 'dashboard',
   EDITOR = 'editor',
-  AUTH = 'auth'
+  AUTH = 'auth',
+  ADMIN = 'admin'
 }
 
 export type AIModel = 'gemini-3-flash-preview' | 'gemini-3-pro-preview';
@@ -55,4 +61,13 @@ export type AIModel = 'gemini-3-flash-preview' | 'gemini-3-pro-preview';
 export interface TranscriptionSettings {
   language: string;
   model: AIModel;
+}
+
+export interface SystemStats {
+  totalUsers: number;
+  activeNow: number;
+  mrr: number;
+  totalExports: number;
+  conversionRate: number;
+  apiHealth: Record<string, 'healthy' | 'degraded' | 'down'>;
 }

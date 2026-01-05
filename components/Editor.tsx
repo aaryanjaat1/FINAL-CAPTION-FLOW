@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { User, Caption, VideoStyle, Project } from '../types';
 import { Button } from './Button';
 import { transcribeVideo } from '../services/geminiService';
-import { FONT_FAMILIES, CAPTION_TEMPLATES } from '../constants';
+import { FONT_FAMILIES, CAPTION_TEMPLATES, FREE_TRIAL_LIMIT } from '../constants';
 import { projectService } from '../services/projectService';
 import { supabase } from '../lib/supabase';
 
@@ -117,7 +117,6 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
     setExportProgress(0);
     setExportStep('Initializing Pro Engine...');
     try {
-      // Capture the returned project to get the ID if it was a new project
       const savedProject = await projectService.saveProject(projectName, captions, style, projectId);
       if (savedProject?.id) setProjectId(savedProject.id);
 
@@ -128,7 +127,7 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
         { progress: 100, text: 'Mastering Complete' }
       ];
       for (const step of steps) {
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 800));
         setExportProgress(step.progress);
         setExportStep(step.text);
       }
@@ -188,6 +187,8 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
     if (style.layout === 'word') {
       const activeWordIndex = Math.floor((currentTime - activeCap.startTime) / wordDuration);
       displayWords = [words[Math.min(activeWordIndex, words.length - 1)]];
+    } else if (style.layout === 'single') {
+       displayWords = words.slice(0, 1);
     }
 
     const textStyle: React.CSSProperties = {
@@ -205,7 +206,7 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
       <div className={`absolute left-0 right-0 px-10 flex justify-center pointer-events-none z-20 transition-all duration-500 ${posStyles[style.position]}`}>
         <div className="text-center flex flex-wrap justify-center items-center gap-x-4 gap-y-2 min-h-[120px] max-w-[90%] p-4 rounded-3xl" style={{ backgroundColor: style.backgroundColor }}>
           {displayWords.map((word, idx) => {
-            const wordIdxInChunk = style.layout === 'word' ? words.indexOf(word) : idx;
+            const wordIdxInChunk = (style.layout === 'word' || style.layout === 'single') ? words.indexOf(word) : idx;
             const wordStart = activeCap.startTime + (wordIdxInChunk * wordDuration);
             const wordEnd = wordStart + wordDuration;
             const isActive = currentTime >= wordStart && currentTime <= wordEnd;
@@ -248,9 +249,9 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
       <div className="h-screen bg-[#050505] flex items-center justify-center p-12">
         <div className="w-full max-w-2xl aspect-video glass-card rounded-[64px] flex flex-col items-center justify-center transition-all duration-500 cursor-pointer group hover:scale-[1.02]" onClick={() => fileInputRef.current?.click()}>
           <div className="w-24 h-24 bg-purple-gradient rounded-full flex items-center justify-center text-4xl mb-8 shadow-2xl">📤</div>
-          <h2 className="text-3xl font-brand font-black uppercase tracking-tighter mb-4">Launch Your Viral Project</h2>
-          <p className="text-gray-500 font-bold text-[10px] uppercase tracking-[0.4em] mb-12">Pro-Grade AI Video Processing Engine</p>
-          <Button className="px-12 py-5 bg-purple-gradient rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">SELECT MEDIA</Button>
+          <h2 className="text-3xl font-brand font-black uppercase tracking-tighter mb-4 text-white">Upload Media</h2>
+          <p className="text-gray-500 font-bold text-[10px] uppercase tracking-[0.4em] mb-12">Start your next viral project</p>
+          <Button className="px-12 py-5 bg-purple-gradient rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">CHOOSE VIDEO</Button>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="video/*" className="hidden" />
         </div>
       </div>
@@ -259,6 +260,7 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
 
   return (
     <div className="h-screen flex bg-[#050505] text-white overflow-hidden font-sans">
+      {/* Primary Sidebar */}
       <aside className="w-[320px] glass-card border-none border-r border-white/5 flex flex-col z-50">
         <div className="p-10 flex items-center gap-4 border-b border-white/5">
           <div className="w-10 h-10 bg-purple-gradient rounded-xl flex items-center justify-center font-black">C</div>
@@ -270,11 +272,12 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
         <div className="p-10 border-t border-white/5">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10"></div>
-            <div className="flex flex-col"><span className="text-[10px] font-black uppercase text-gray-400">Creator</span><span className="text-xs font-black truncate w-24">{user.email.split('@')[0]}</span></div>
+            <div className="flex flex-col"><span className="text-[10px] font-black uppercase text-gray-400">Creator</span><span className="text-xs font-black truncate w-24 text-white">{user.email.split('@')[0]}</span></div>
           </div>
         </div>
       </aside>
 
+      {/* Main Editing Area */}
       <main className="flex-grow flex flex-col relative overflow-hidden bg-[#030303]">
         <header className="h-20 flex items-center justify-between px-10 glass-card border-none border-b border-white/5 z-[60] backdrop-blur-3xl bg-black/40">
           <div className="flex items-center gap-6">
@@ -283,16 +286,17 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
               {isEditingName ? (
                 <input autoFocus className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-purple-400 w-40" value={projectName} onChange={(e) => setProjectName(e.target.value)} onBlur={() => setIsEditingName(false)} />
               ) : (
-                <span className="text-[10px] font-black uppercase tracking-widest">{projectName}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white">{projectName}</span>
               )}
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={handleExport} className="px-10 py-3.5 bg-purple-gradient rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-600/30 hover:scale-[1.02] active:scale-95 transition-all">🚀 Export Master</button>
+            <button onClick={handleExport} className="px-10 py-3.5 bg-purple-gradient rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-600/30 hover:scale-[1.02] active:scale-95 transition-all text-white">🚀 Export Video</button>
           </div>
         </header>
 
         <div className="flex-grow flex overflow-hidden">
+          {/* Player View */}
           <div className="flex-grow flex items-center justify-center p-14 relative overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-40"></div>
              <div className="relative h-full max-h-[850px] aspect-[9/16] bg-black rounded-[72px] shadow-[0_0_120px_rgba(0,0,0,1)] border-[16px] border-[#151515] overflow-hidden group">
@@ -311,15 +315,17 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
 
                 {(isTranscribing || isUploading) && (
                   <div className="absolute inset-0 glass-overlay z-[90] flex flex-col items-center justify-center p-12 text-center backdrop-blur-3xl animate-in fade-in duration-500">
-                    <div className="w-20 h-20 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-10 shadow-[0_0_40px_rgba(168,85,247,0.4)]"></div>
-                    <h3 className="text-3xl font-brand font-black uppercase tracking-tighter mb-4">{isUploading ? 'Securing Media' : 'AI Speech Mapping'}</h3>
+                    <div className="w-20 h-20 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-10"></div>
+                    <h3 className="text-3xl font-brand font-black uppercase tracking-tighter mb-4 text-white">{isUploading ? 'Uploading Media' : 'AI Processing'}</h3>
                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] max-w-[240px]">Architecting word-level precision for viral engagement.</p>
                   </div>
                 )}
              </div>
           </div>
 
+          {/* Configuration Inspector Sidebar */}
           <aside className="w-[520px] glass-card border-none border-l border-white/5 flex flex-col overflow-hidden z-[60] bg-black/40">
+            {/* Tab Navigation */}
             <div className="flex h-20 p-2 bg-white/[0.02] border-b border-white/5 gap-1">
               {[
                 { id: 'presets', icon: '🎨' },
@@ -334,7 +340,8 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
                   onClick={() => setActiveTab(tab.id as any)} 
                   className={`flex-1 flex flex-col items-center justify-center rounded-xl border transition-all ${activeTab === tab.id ? 'bg-white/10 text-white border-white/20 shadow-lg' : 'text-gray-600 border-transparent hover:text-gray-400 hover:bg-white/[0.03]'}`}
                 >
-                  <span className="text-[9px] font-black uppercase tracking-widest">{tab.id}</span>
+                   <span className="text-sm mb-0.5">{tab.icon}</span>
+                   <span className="text-[9px] font-black uppercase tracking-widest">{tab.id}</span>
                 </button>
               ))}
             </div>
@@ -342,13 +349,13 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
             <div className="flex-grow overflow-y-auto p-12 custom-scrollbar">
               {activeTab === 'presets' && (
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
-                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Styles</h3>
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Viral Presets</h3>
                   <div className="grid grid-cols-2 gap-6">
                     {CAPTION_TEMPLATES.map(t => (
                       <button 
                         key={t.id} 
                         onClick={() => setStyle({ ...style, ...t.style, template: t.id })}
-                        className={`p-8 rounded-[40px] glass-card border-2 flex flex-col items-center gap-4 transition-all hover:scale-[1.03] ${style.template === t.id ? 'border-purple-500 bg-purple-500/5 purple-glow' : 'border-white/5 hover:border-white/10'}`}
+                        className={`p-8 rounded-[40px] glass-card border-2 flex flex-col items-center gap-4 transition-all hover:scale-[1.03] ${style.template === t.id ? 'border-purple-500 bg-purple-500/5' : 'border-white/5 hover:border-white/10'}`}
                       >
                         <span style={{ fontFamily: t.style.fontFamily, color: t.style.color }} className="text-2xl font-black">{t.code}</span>
                         <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">{t.name}</span>
@@ -358,9 +365,110 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
                 </div>
               )}
 
+              {activeTab === 'layout' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Layout</h3>
+                  <div className="space-y-10">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-6">Vertical Position</label>
+                      <div className="grid grid-cols-3 gap-4">
+                        {['top', 'middle', 'bottom'].map(p => (
+                          <button key={p} onClick={() => setStyle({...style, position: p as any})} className={`py-4 rounded-2xl border font-black text-[9px] uppercase tracking-widest transition-all ${style.position === p ? 'bg-purple-600/20 text-purple-400 border-purple-500/40' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>{p}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-6">Display Strategy</label>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[
+                          { id: 'word', label: 'Single Active Word' },
+                          { id: 'phrase', label: 'Full Phrase' },
+                          { id: 'double', label: 'Double Line' },
+                          { id: 'single', label: 'Single Line' }
+                        ].map(l => (
+                          <button key={l.id} onClick={() => setStyle({...style, layout: l.id as any})} className={`py-6 px-4 rounded-[24px] border font-black text-[9px] uppercase tracking-widest text-center transition-all ${style.layout === l.id ? 'bg-purple-600/20 text-purple-400 border-purple-500/40' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>{l.label}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'text' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Typography</h3>
+                  <div className="space-y-10">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-6">Font Family</label>
+                      <div className="grid grid-cols-2 gap-4">
+                        {FONT_FAMILIES.map(f => (
+                          <button key={f} onClick={() => setStyle({...style, fontFamily: f})} className={`py-4 px-4 rounded-2xl border text-[11px] font-black transition-all ${style.fontFamily === f ? 'bg-purple-600/20 text-purple-400 border-purple-500/40' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`} style={{ fontFamily: f }}>{f}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-10">
+                       <div>
+                         <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-white">Font Size</label>
+                         <input type="range" min="12" max="120" value={style.fontSize} onChange={(e) => setStyle({...style, fontSize: parseInt(e.target.value)})} className="w-full accent-purple-500" />
+                       </div>
+                       <div>
+                         <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-white">Weight</label>
+                         <select value={style.fontWeight} onChange={(e) => setStyle({...style, fontWeight: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 font-black text-[10px] uppercase">
+                            <option value="400">Normal</option>
+                            <option value="600">Semi Bold</option>
+                            <option value="700">Bold</option>
+                            <option value="900">Black</option>
+                         </select>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-10">
+                       <div>
+                          <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-white">Text Color</label>
+                          <input type="color" value={style.color} onChange={(e) => setStyle({...style, color: e.target.value})} className="w-full h-12 bg-transparent cursor-pointer" />
+                       </div>
+                       <div>
+                          <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-white">Stroke Color</label>
+                          <input type="color" value={style.strokeColor} onChange={(e) => setStyle({...style, strokeColor: e.target.value})} className="w-full h-12 bg-transparent cursor-pointer" />
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'highlight' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Highlights</h3>
+                  <div className="space-y-10">
+                    <div>
+                       <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-6">Highlight Style</label>
+                       <div className="grid grid-cols-2 gap-4">
+                        {['background', 'underline', 'glow', 'outline', 'none'].map(s => (
+                          <button key={s} onClick={() => setStyle({...style, highlightStyle: s as any})} className={`py-4 rounded-2xl border font-black text-[9px] uppercase tracking-widest transition-all ${style.highlightStyle === s ? 'bg-purple-600/20 text-purple-400 border-purple-500/40' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>{s}</button>
+                        ))}
+                       </div>
+                    </div>
+                    <div>
+                       <label className="block text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 text-white">Highlight Color</label>
+                       <input type="color" value={style.highlightColor} onChange={(e) => setStyle({...style, highlightColor: e.target.value})} className="w-full h-12 bg-transparent cursor-pointer" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'animation' && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Animation</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {['pop', 'fade', 'slide', 'bounce', 'none'].map(a => (
+                      <button key={a} onClick={() => setStyle({...style, animation: a as any})} className={`py-8 rounded-[32px] border font-black text-[11px] uppercase tracking-widest transition-all ${style.animation === a ? 'bg-purple-600/20 text-purple-400 border-purple-500/40 shadow-lg' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>{a}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'timeline' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
-                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase">Script</h3>
+                  <h3 className="text-4xl font-brand font-black tracking-tighter uppercase text-white">Script</h3>
                   {captions.map((cap, idx) => (
                     <div key={cap.id} className={`p-8 rounded-[40px] glass-card border-none transition-all cursor-pointer ${currentTime >= cap.startTime && currentTime <= cap.endTime ? 'bg-purple-600/10 ring-1 ring-purple-500/30' : 'bg-white/[0.02]'}`} onClick={() => { if (videoRef.current) videoRef.current.currentTime = cap.startTime; }}>
                       <div className="flex justify-between items-center mb-6">
@@ -374,12 +482,12 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
                   ))}
                 </div>
               )}
-              {/* Other tabs omitted for brevity but they follow the same logic as the original code */}
             </div>
           </aside>
         </div>
       </main>
 
+      {/* Export UI remains the same */}
       {isExporting && (
         <div className="fixed inset-0 glass-overlay z-[200] flex flex-col items-center justify-center p-12 text-center backdrop-blur-3xl animate-in fade-in duration-500">
            <div className="relative mb-20 scale-150">
@@ -396,10 +504,10 @@ export const Editor: React.FC<EditorProps> = ({ user, initialProject, onBack, on
            <div className="w-full max-w-xl glass-card rounded-[64px] p-20 text-center relative overflow-hidden shadow-[0_0_150px_rgba(0,0,0,1)]">
               <div className="absolute top-0 left-0 w-full h-2 bg-purple-gradient"></div>
               <div className="w-24 h-24 bg-purple-600/20 text-purple-400 rounded-full flex items-center justify-center text-4xl mx-auto mb-12 shadow-inner border border-purple-500/10">✓</div>
-              <h3 className="text-5xl font-brand font-black mb-8 tracking-tighter uppercase text-white">Production Ready!</h3>
+              <h3 className="text-5xl font-brand font-black mb-8 tracking-tighter uppercase text-white">Export Ready!</h3>
               <div className="flex flex-col gap-6">
                  <Button size="lg" onClick={triggerDownload} className="w-full py-7 bg-purple-gradient font-black text-lg rounded-3xl shadow-2xl shadow-purple-600/50 hover:scale-[1.03] transition-all active:scale-95">DOWNLOAD HD MASTER</Button>
-                 <button onClick={onExport} className="py-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">Finish & Save</button>
+                 <button onClick={onExport} className="py-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-600 hover:text-white transition-colors">FINISH PROJECT</button>
               </div>
            </div>
         </div>

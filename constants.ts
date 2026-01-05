@@ -12,6 +12,7 @@ export const FONT_FAMILIES = [
   'Plus Jakarta Sans'
 ];
 
+// Added 'as const' to ensure literal types match the VideoStyle union type requirements
 export const CAPTION_TEMPLATES = [
   { 
     id: 'beast', 
@@ -89,4 +90,4 @@ export const CAPTION_TEMPLATES = [
       position: 'middle'
     }
   }
-];
+] as const;
