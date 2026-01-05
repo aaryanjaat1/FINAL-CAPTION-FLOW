@@ -3,14 +3,20 @@ import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
 export const authService = {
-  getProfile: async (userId: string): Promise<User | null> => {
+  getProfile: async (userId: string, retryCount = 0): Promise<User | null> => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
-    if (error || !data) return null;
+    // If trigger is still running, retry once after 500ms
+    if ((error || !data) && retryCount < 1) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return authService.getProfile(userId, retryCount + 1);
+    }
+
+    if (!data) return null;
 
     return {
       id: data.id,
@@ -41,28 +47,11 @@ export const authService = {
     if (error) throw error;
     if (!data.user) throw new Error('Signup failed');
 
-    // Create profile in 'profiles' table (assuming a trigger doesn't exist)
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        { 
-          id: data.user.id, 
-          email: email, 
-          is_subscribed: false, 
-          videos_processed: 0 
-        }
-      ])
-      .select()
-      .single();
-
-    if (profileError) throw profileError;
-
-    return {
-      id: profileData.id,
-      email: profileData.email,
-      isSubscribed: profileData.is_subscribed,
-      videosProcessed: profileData.videos_processed
-    };
+    // We no longer manually insert here because the SQL trigger handles it.
+    // We just fetch the profile that the trigger created.
+    const profile = await authService.getProfile(data.user.id);
+    if (!profile) throw new Error('Profile initialization timed out');
+    return profile;
   },
 
   logout: async () => {

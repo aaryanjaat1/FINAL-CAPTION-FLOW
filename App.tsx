@@ -1,60 +1,109 @@
 
 import React, { useState, useEffect } from 'react';
-import { AppRoute, User } from './types';
+import { AppRoute, User, Project } from './types';
 import { LandingPage } from './components/LandingPage';
 import { Dashboard } from './components/Dashboard';
 import { Editor } from './components/Editor';
+import { AuthView } from './components/AuthView';
 import { authService } from './services/authService';
-
-// Temporary mock user to bypass auth while developing features
-const MOCK_USER: User = {
-  id: '00000000-0000-0000-0000-000000000000', // Dummy UUID for database references
-  email: 'guest@capcutify.demo',
-  isSubscribed: true, // Enabled by default for feature testing
-  videosProcessed: 0
-};
+import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
   const [route, setRoute] = useState<AppRoute>(AppRoute.LANDING);
-  const [user, setUser] = useState<User>(MOCK_USER);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          setRoute(AppRoute.DASHBOARD);
+        }
+      } catch (err) {
+        console.error("Auth initialization failed", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await authService.getProfile(session.user.id);
+        setUser(profile);
+      } else {
+        setUser(null);
+        setRoute(AppRoute.LANDING);
+        setActiveProject(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleProjectComplete = async () => {
-    const updatedUser = { ...user, videosProcessed: user.videosProcessed + 1 };
-    setUser(updatedUser);
-    setRoute(AppRoute.DASHBOARD);
+    if (user) {
+      const updatedUser = { ...user, videosProcessed: user.videosProcessed + 1 };
+      await authService.updateUser(updatedUser);
+      setUser(updatedUser);
+      setRoute(AppRoute.DASHBOARD);
+      setActiveProject(null);
+    }
   };
 
-  const handleUpgrade = () => {
-    setUser({ ...user, isSubscribed: true });
+  const handleNavigate = (newRoute: AppRoute, project?: Project) => {
+    if (project) setActiveProject(project);
+    else if (newRoute === AppRoute.EDITOR) setActiveProject(null);
+    setRoute(newRoute);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.logout();
+    setUser(null);
     setRoute(AppRoute.LANDING);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   switch (route) {
     case AppRoute.LANDING:
-      return <LandingPage onStart={() => setRoute(AppRoute.DASHBOARD)} />;
+      return <LandingPage onStart={() => setRoute(user ? AppRoute.DASHBOARD : AppRoute.AUTH)} />;
+    
+    case AppRoute.AUTH:
+      return <AuthView onAuthSuccess={(u) => { setUser(u); setRoute(AppRoute.DASHBOARD); }} onBack={() => setRoute(AppRoute.LANDING)} />;
+
     case AppRoute.DASHBOARD:
-      return (
+      return user ? (
         <Dashboard 
           user={user} 
           onLogout={handleLogout} 
-          onNavigate={setRoute} 
-          onUpgrade={handleUpgrade}
+          onNavigate={handleNavigate} 
+          onUpgrade={() => {}}
         />
-      );
+      ) : <AuthView onAuthSuccess={(u) => { setUser(u); setRoute(AppRoute.DASHBOARD); }} onBack={() => setRoute(AppRoute.LANDING)} />;
+
     case AppRoute.EDITOR:
-      return (
+      return user ? (
         <Editor 
           user={user} 
-          onBack={() => setRoute(AppRoute.DASHBOARD)} 
+          initialProject={activeProject || undefined}
+          onBack={() => { setRoute(AppRoute.DASHBOARD); setActiveProject(null); }} 
           onExport={handleProjectComplete} 
         />
-      );
+      ) : <AuthView onAuthSuccess={(u) => { setUser(u); setRoute(AppRoute.DASHBOARD); }} onBack={() => setRoute(AppRoute.LANDING)} />;
+
     default:
-      return <LandingPage onStart={() => setRoute(AppRoute.DASHBOARD)} />;
+      return <LandingPage onStart={() => setRoute(AppRoute.AUTH)} />;
   }
 };
 

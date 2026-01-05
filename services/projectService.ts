@@ -2,29 +2,30 @@
 import { supabase } from '../lib/supabase';
 import { Project, Caption, VideoStyle } from '../types';
 
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
-
 export const projectService = {
   getProjects: async (): Promise<Project[]> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return [];
+
     const { data, error } = await supabase
       .from('projects')
       .select('*')
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.warn('Supabase fetch error (likely RLS):', error.message);
+      console.error('Error fetching projects:', error.message);
       return [];
     }
     return data || [];
   },
 
   saveProject: async (name: string, captions: Caption[], style: VideoStyle, id?: string): Promise<Project> => {
-    // Attempt to get real user, fallback to mock
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || MOCK_USER_ID;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) throw new Error('Authentication required to save projects');
 
     const payload = {
-      user_id: userId,
+      user_id: session.user.id,
       name,
       captions,
       style,
@@ -36,6 +37,7 @@ export const projectService = {
         .from('projects')
         .update(payload)
         .eq('id', id)
+        .eq('user_id', session.user.id)
         .select()
         .single();
 
@@ -54,7 +56,15 @@ export const projectService = {
   },
 
   deleteProject: async (id: string) => {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) throw new Error('Authentication required');
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+    
     if (error) throw error;
   }
 };

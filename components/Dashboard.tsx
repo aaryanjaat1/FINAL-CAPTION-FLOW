@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, AppRoute, Project } from '../types';
 import { Button } from './Button';
@@ -7,7 +8,7 @@ import { projectService } from '../services/projectService';
 interface DashboardProps {
   user: User;
   onLogout: () => void;
-  onNavigate: (route: AppRoute) => void;
+  onNavigate: (route: AppRoute, project?: Project) => void;
   onUpgrade: () => void;
 }
 
@@ -109,18 +110,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
                  <div 
                     key={project.id} 
                     className="group glass-card rounded-[40px] overflow-hidden hover:border-purple-500/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => onNavigate(AppRoute.EDITOR)}
+                    onClick={() => onNavigate(AppRoute.EDITOR, project)}
                  >
                     <div className="aspect-[9/16] bg-[#030303] relative overflow-hidden">
                        <img src={project.thumbnail_url} className="w-full h-full object-cover opacity-40 group-hover:opacity-80 transition-all duration-700 group-hover:scale-110" alt={project.name} />
                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-all backdrop-blur-sm">
                           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black font-black shadow-2xl scale-75 group-hover:scale-100 transition-transform">EDIT</div>
-                       </div>
-                       
-                       <div className="absolute top-6 right-6">
-                         <div className="px-3 py-1 glass-card border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest">
-                           {project.style?.template.toUpperCase() || 'DEFAULT'}
-                         </div>
                        </div>
                     </div>
                     <div className="p-8">
