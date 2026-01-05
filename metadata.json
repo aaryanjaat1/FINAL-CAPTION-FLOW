@@ -1,0 +1,8 @@
+{
+  "name": "CaptionFlow",
+  "description": "A production-ready video caption editing platform with AI transcription, custom styling, and premium export capabilities.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
