@@ -32,7 +32,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col lg:flex-row font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col lg:flex-row font-sans overflow-x-hidden">
       {/* Mobile Top Bar */}
       <div className="lg:hidden h-14 border-b border-white/10 flex items-center justify-between px-6 bg-black z-[150]">
         <span className="font-brand font-black text-white text-sm">CAPTIONFLOW</span>

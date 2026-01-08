@@ -86,7 +86,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#050505] text-white overflow-hidden mesh-gradient font-sans">
+    <div className="flex flex-col min-h-screen bg-[#050505] text-white overflow-x-hidden mesh-gradient font-sans text-left">
       {/* Background Orbital Glows */}
       <div className="orbital-glow bg-purple-600 top-[-200px] left-[-200px]"></div>
       <div className="orbital-glow bg-purple-900 bottom-[-200px] right-[-200px]" style={{ animationDelay: '-10s' }}></div>

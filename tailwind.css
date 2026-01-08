@@ -11,7 +11,7 @@
         radial-gradient(at 100% 0%, hsla(280,40%,8%,1) 0, transparent 50%);
     background-attachment: fixed;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 /* Orbital Glow Backgrounds */
