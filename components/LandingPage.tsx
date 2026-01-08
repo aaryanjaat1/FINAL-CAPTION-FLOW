@@ -1,11 +1,39 @@
-import React from 'react';
+
+import React, { useRef, useState } from 'react';
 import { Button } from './Button';
+import { transcribeVideo } from '../services/geminiService';
+import { generateSRT, downloadSRTFile } from '../services/srtService';
 
 interface LandingPageProps {
   onStart: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+  const [isConverting, setIsConverting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleQuickConvert = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsConverting(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        const captions = await transcribeVideo(base64, file.type);
+        const srtContent = generateSRT(captions, { wordsPerLine: 5, linesPerCaption: 2 });
+        downloadSRTFile(srtContent, file.name.split('.')[0] + '.srt');
+        setIsConverting(false);
+        alert("Free SRT conversion complete! For advanced editing, please sign up.");
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      alert("Conversion failed. Please login for higher priority processing.");
+      setIsConverting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#050505] text-white overflow-hidden">
       {/* Premium Header */}
@@ -17,8 +45,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           </div>
           <div className="hidden md:flex gap-10 text-[11px] font-extrabold uppercase tracking-[0.2em] text-gray-400">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#converter" className="hover:text-white transition-colors">Converter</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-            <a href="#" className="hover:text-white transition-colors">Creators</a>
           </div>
           <div className="flex gap-4 items-center">
             <button onClick={onStart} className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">Login</button>
@@ -29,9 +57,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
       {/* Cinematic Hero */}
       <section className="relative pt-64 pb-32 px-6 flex flex-col items-center text-center">
-        {/* Dynamic Background elements */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] bg-purple-600/10 blur-[140px] rounded-full -z-10 animate-pulse"></div>
-        <div className="absolute top-[20%] left-[10%] w-64 h-64 bg-pink-600/5 blur-[100px] rounded-full -z-10"></div>
         
         <div className="inline-flex items-center gap-3 px-5 py-2.5 mb-10 text-[10px] font-black tracking-[0.2em] text-purple-400 bg-purple-500/10 rounded-full border border-purple-500/20 uppercase glass-overlay">
           <span className="flex h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
@@ -55,43 +81,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             START CREATING — IT'S FREE
           </Button>
         </div>
+      </section>
 
-        {/* Product Preview Mockup */}
-        <div className="mt-32 w-full max-w-6xl relative group px-4">
-          <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-[48px] blur-3xl opacity-10 group-hover:opacity-20 transition-opacity duration-1000"></div>
-          <div className="glass-card rounded-[40px] p-2 overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)]">
-            <div className="relative rounded-[32px] overflow-hidden bg-[#070707]">
-               <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2000" alt="Editor Preview" className="w-full opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-80 transition-all duration-1000" />
-               <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all duration-500">
-                  <div className="glass-card p-14 rounded-full text-center hover:scale-110 transition-transform cursor-pointer border-white/20 group/play">
-                     <div className="w-20 h-20 bg-purple-gradient rounded-full flex items-center justify-center text-3xl shadow-2xl group-hover/play:purple-glow">▶</div>
-                  </div>
-               </div>
-               
-               {/* UI Floating Elements */}
-               <div className="absolute bottom-10 left-10 glass-card p-6 rounded-3xl animate-float hidden md:block">
-                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-white/10 rounded-xl"></div>
-                   <div className="space-y-2">
-                     <div className="h-2 w-24 bg-white/20 rounded-full"></div>
-                     <div className="h-2 w-16 bg-white/10 rounded-full"></div>
-                   </div>
-                 </div>
-               </div>
-            </div>
+      {/* Free SRT Converter Section */}
+      <section id="converter" className="py-40 px-6 flex flex-col items-center">
+        <div className="w-full max-w-5xl glass-card rounded-[60px] p-16 md:p-24 relative overflow-hidden text-center">
+          <div className="absolute inset-0 bg-purple-gradient opacity-5"></div>
+          <span className="text-purple-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 block">Free AI Tool</span>
+          <h2 className="text-4xl md:text-6xl font-brand font-black mb-10 tracking-tighter uppercase">Instant SRT Converter</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto font-bold uppercase tracking-widest text-[11px] mb-16 leading-loose opacity-60">
+            Don't need the full editor yet? No problem. Upload any MP3 or MP4 and get a perfectly formatted SRT subtitle file in seconds. High accuracy, zero cost.
+          </p>
+          
+          <div className="flex flex-col items-center gap-8">
+            <input type="file" ref={fileInputRef} onChange={handleQuickConvert} className="hidden" accept="video/*,audio/*" />
+            <Button 
+              size="lg" 
+              onClick={() => fileInputRef.current?.click()}
+              loading={isConverting}
+              className="px-20 py-8 bg-white text-black hover:bg-gray-100 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-[0_0_60px_rgba(255,255,255,0.1)] transition-all"
+            >
+              {isConverting ? 'GENERATING SRT...' : 'CONVERT FILE TO SRT'}
+            </Button>
+            <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest">Supports files up to 100MB • No account required</p>
           </div>
         </div>
       </section>
-
-      {/* Trust Section */}
-      <div className="py-20 border-y border-white/5 bg-white/[0.01]">
-        <p className="text-center text-[10px] font-black tracking-[0.4em] text-gray-500 uppercase mb-12">TRANSFORMING CONTENT FOR</p>
-        <div className="flex flex-wrap justify-center gap-16 md:gap-24 opacity-20 grayscale brightness-200 px-10">
-           {['TIKTOK', 'REELS', 'SHORTS', 'YOUTUBE', 'NETFLIX'].map(name => (
-             <span key={name} className="text-3xl font-brand font-black tracking-tighter italic">{name}</span>
-           ))}
-        </div>
-      </div>
 
       {/* Glass Pricing Section */}
       <section id="pricing" className="py-40 px-6 flex flex-col items-center">
@@ -116,7 +131,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
            </div>
            
            <div className="relative p-1 bg-gradient-to-br from-purple-500 to-pink-600 rounded-[40px] group overflow-hidden">
-              <div className="absolute inset-0 bg-purple-600 animate-pulse opacity-20 blur-3xl"></div>
               <div className="relative glass-card bg-black/80 h-full p-14 rounded-[38px] flex flex-col backdrop-blur-3xl">
                 <div className="flex justify-between items-start mb-4">
                   <p className="text-[10px] font-black tracking-[0.3em] text-purple-400 uppercase">Creator Pro</p>
