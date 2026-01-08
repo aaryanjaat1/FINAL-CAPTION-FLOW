@@ -17,16 +17,24 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initAuth = async () => {
+      // Safety timeout: if auth takes more than 3 seconds, show the landing page anyway
+      const timeoutId = setTimeout(() => {
+        if (loading) {
+          console.warn("Auth initialization timed out, proceeding to landing.");
+          setLoading(false);
+        }
+      }, 3000);
+
       try {
         const currentUser = await authService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
-          // Auto-direct based on path or default to dashboard
           setRoute(AppRoute.DASHBOARD);
         }
       } catch (err) {
         console.error("Auth initialization failed", err);
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     };
@@ -71,8 +79,9 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4"></div>
+        <div className="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase">Establishing Link...</div>
       </div>
     );
   }
@@ -105,7 +114,6 @@ const App: React.FC = () => {
       ) : <AuthView onAuthSuccess={(u) => { setUser(u); setRoute(AppRoute.DASHBOARD); }} onBack={() => setRoute(AppRoute.LANDING)} />;
 
     case AppRoute.ADMIN:
-      // Only allow true admins
       return user?.isAdmin ? (
         <AdminDashboard 
           user={user} 

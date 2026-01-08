@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -6,122 +7,52 @@
     <title>CaptionFlow - AI Viral Video Editor</title>
     <meta name="description" content="Transform your voice with AI-powered viral captions. One click, professional quality.">
     
-    <!-- Base URL for cPanel routing -->
     <base href="/">
+
+    <script>
+      /** 
+       * ACTIVATION STEP:
+       * If you are seeing a black screen, paste your Gemini API Key in the quotes below.
+       * This allows the app to 'talk' to the AI without needing a complex backend.
+       */
+      window.process = { 
+        env: { 
+          API_KEY: "" // <--- PASTE YOUR KEY HERE IN CPANEL FILE MANAGER
+        } 
+      };
+    </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #7c3aed;
-            --accent-glow: rgba(124, 58, 237, 0.4);
         }
         body { 
           font-family: 'Plus Jakarta Sans', sans-serif; 
           background-color: #050505;
           color: white;
-          -webkit-font-smoothing: antialiased;
-          overflow-x: hidden;
+          margin: 0;
         }
-        .font-brand { font-family: 'Montserrat', sans-serif; }
-        .font-display { font-family: 'Space Grotesk', sans-serif; }
-        
-        .glass-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .pro-shadow {
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.05);
-        }
-
-        .pro-shadow-hover:hover {
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255,255,255,0.1);
-          transform: translateY(-4px);
-        }
-
-        .text-gradient {
-          background: linear-gradient(to right, #fff, #a855f7);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
         .mesh-gradient {
             background-color: #050505;
             background-image: 
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            position: relative;
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
         }
-
-        .mesh-gradient::before {
-            content: "";
+        #root:empty::after {
+            content: "INITIALIZING CAPTIONFLOW...";
             position: absolute;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            opacity: 0.05;
-            pointer-events: none;
-            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.5em;
+            color: rgba(255,255,255,0.2);
+            animation: pulse 2s infinite;
         }
-
-        @keyframes slideUp {
-          from { transform: translateY(40px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-up { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-          100% { transform: translateY(0px); }
-        }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-
-        .perspective-mockup {
-            perspective: 2000px;
-        }
-        .mockup-content {
-            transform: rotateX(10deg) rotateY(-5deg);
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @media (max-width: 768px) {
-            .mockup-content { transform: none !important; }
-        }
-        .perspective-mockup:hover .mockup-content {
-            transform: rotateX(2deg) rotateY(-1deg);
-        }
-
-        .ticker-scroll {
-            display: flex;
-            width: fit-content;
-            animation: ticker 40s linear infinite;
-        }
-        @keyframes ticker {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        .glow-button {
-            position: relative;
-            overflow: hidden;
-        }
-        .glow-button::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.5s ease;
-        }
-        .glow-button:hover::after {
-            transform: scale(1);
-        }
+        @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
     </style>
 <script type="importmap">
 {
@@ -135,7 +66,7 @@
 }
 </script>
 </head>
-<body class="antialiased overflow-x-hidden selection:bg-purple-500/30 selection:text-purple-200">
+<body class="antialiased overflow-x-hidden mesh-gradient">
     <div id="root"></div>
 </body>
 </html>
