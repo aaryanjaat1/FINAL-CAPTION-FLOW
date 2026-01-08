@@ -2,33 +2,32 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Caption, AIModel } from "../types";
 
+/**
+ * PRODUCTION NOTE:
+ * To hide your API_KEY from users, you should call a backend proxy 
+ * (like a Supabase Edge Function) instead of calling GoogleGenAI directly here.
+ * For this demo, we use the environment variable, but for cPanel, 
+ * you'd move this logic to the server side.
+ */
+
 export const transcribeVideo = async (
   videoBase64: string, 
   mimeType: string, 
   settings: { language: string; model: AIModel } = { language: 'English', model: 'gemini-3-flash-preview' }
 ): Promise<Caption[]> => {
+  // Creating instance right before call as per guidelines for key safety
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  const prompt = `Transcribe the audio from this file into ${settings.language} captions for viral social media content.
-  STRICT TIMING RULES:
-  1. MICRO-TIMING: Synchronize EVERY word to the exact millisecond of phonation. The "startTime" must be the absolute start of the first syllable, and "endTime" must be the absolute end of the last syllable.
-  2. GRANULARITY: Break captions into short, punchy segments (max 3 words). 
-  3. SEAMLESSNESS: Ensure ZERO gaps between consecutive captions unless there is a significant pause (>300ms) in speech.
-  4. ACCURACY: If the speaker talks fast, shorten the segments to maintain readability.
-  5. Return ONLY a JSON array of objects.
-  6. Format: [{"id": string, "startTime": number, "endTime": number, "text": string}]`;
+  const prompt = `Transcribe audio to ${settings.language} captions. 
+  Rules: Punchy segments (max 3 words), zero gaps, synced to millisecond.
+  Return JSON array only: [{"id": string, "startTime": number, "endTime": number, "text": string}]`;
 
   try {
     const response = await ai.models.generateContent({
       model: settings.model,
       contents: {
         parts: [
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: videoBase64
-            }
-          },
+          { inlineData: { mimeType, data: videoBase64 } },
           { text: prompt }
         ]
       },
@@ -51,17 +50,11 @@ export const transcribeVideo = async (
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("Empty response from AI");
-    
-    const result = JSON.parse(text);
-    return result;
+    return JSON.parse(response.text || "[]");
   } catch (error: any) {
-    console.error("Gemini Transcription failed:", error);
-    return [
-      { id: '1', startTime: 0.5, endTime: 3.5, text: "Transcription processing error." },
-      { id: '2', startTime: 4.0, endTime: 7.0, text: "Check file and try again." }
-    ];
+    console.error("Transcription failed", error);
+    // Log this to your Admin Panel via a 'logs' table in Supabase
+    return [];
   }
 };
 
@@ -71,57 +64,22 @@ export const refineCaptionTimings = async (
   captionsToSync: Caption[]
 ): Promise<Caption[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  const prompt = `Refine the timings for the following captions based on the audio waveform in the video. 
-  The text content is already correct, but the "startTime" and "endTime" need to be snapped perfectly to the audio signal.
-  Current Captions: ${JSON.stringify(captionsToSync)}
-  
-  RULES:
-  1. Do NOT change the text.
-  2. Adjust startTime to when the first phoneme begins.
-  3. Adjust endTime to when the last phoneme ends.
-  4. Return the exact same IDs.
-  5. Return ONLY a JSON array of objects.`;
+  const prompt = `Refine timings for these captions. Do not change text. 
+  Captions: ${JSON.stringify(captionsToSync)}`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: videoBase64
-            }
-          },
+          { inlineData: { mimeType, data: videoBase64 } },
           { text: prompt }
         ]
       },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              startTime: { type: Type.NUMBER },
-              endTime: { type: Type.NUMBER },
-              text: { type: Type.STRING },
-            },
-            required: ["id", "startTime", "endTime", "text"]
-          }
-        },
-        temperature: 0.1,
-      }
+      config: { responseMimeType: "application/json" }
     });
-
-    const text = response.text;
-    if (!text) throw new Error("Empty response from AI");
-    
-    return JSON.parse(text);
-  } catch (error: any) {
-    console.error("Gemini Timing Refinement failed:", error);
+    return JSON.parse(response.text || "[]");
+  } catch (error) {
     return captionsToSync;
   }
 };
