@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { Button } from './Button';
 import { transcribeVideo } from '../services/geminiService';
 import { generateSRT, downloadSRTFile } from '../services/srtService';
+import { extractAudioFromVideo } from '../services/mediaService';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -10,27 +11,32 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const [isConverting, setIsConverting] = useState(false);
+  const [conversionStatus, setConversionStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleQuickConvert = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsConverting(true);
+    setConversionStatus('Extracting Audio...');
 
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
-        const captions = await transcribeVideo(base64, file.type);
-        const srtContent = generateSRT(captions, { wordsPerLine: 5, linesPerCaption: 2 });
-        downloadSRTFile(srtContent, file.name.split('.')[0] + '.srt');
-        setIsConverting(false);
-        alert("Free SRT conversion complete! For advanced editing, please sign up.");
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      alert("Conversion failed. Please login for higher priority processing.");
+      // Use media service to extract audio and reduce memory usage
+      const { base64, mimeType } = await extractAudioFromVideo(file);
+      
+      setConversionStatus('AI Transcribing...');
+      const captions = await transcribeVideo(base64, mimeType);
+      
+      const srtContent = generateSRT(captions, { wordsPerLine: 5, linesPerCaption: 2 });
+      downloadSRTFile(srtContent, file.name.split('.')[0] + '.srt');
       setIsConverting(false);
+      setConversionStatus('');
+      alert("Free SRT conversion complete! For advanced editing, please sign up.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Conversion failed. Please login for higher priority processing.");
+      setIsConverting(false);
+      setConversionStatus('');
     }
   };
 
@@ -126,7 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               variant="secondary"
               className="px-20 py-8 text-black shadow-2xl hover:scale-105 transition-transform"
             >
-              {isConverting ? 'GENERATING SRT...' : 'CONVERT FILE TO SRT'}
+              {isConverting ? (conversionStatus || 'GENERATING SRT...') : 'CONVERT FILE TO SRT'}
             </Button>
             <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Supports files up to 100MB • No account required</p>
           </div>

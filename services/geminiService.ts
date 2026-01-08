@@ -64,3 +64,64 @@ export const transcribeVideo = async (
     ];
   }
 };
+
+export const refineCaptionTimings = async (
+  videoBase64: string,
+  mimeType: string,
+  captionsToSync: Caption[]
+): Promise<Caption[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const prompt = `Refine the timings for the following captions based on the audio waveform in the video. 
+  The text content is already correct, but the "startTime" and "endTime" need to be snapped perfectly to the audio signal.
+  Current Captions: ${JSON.stringify(captionsToSync)}
+  
+  RULES:
+  1. Do NOT change the text.
+  2. Adjust startTime to when the first phoneme begins.
+  3. Adjust endTime to when the last phoneme ends.
+  4. Return the exact same IDs.
+  5. Return ONLY a JSON array of objects.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: videoBase64
+            }
+          },
+          { text: prompt }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              startTime: { type: Type.NUMBER },
+              endTime: { type: Type.NUMBER },
+              text: { type: Type.STRING },
+            },
+            required: ["id", "startTime", "endTime", "text"]
+          }
+        },
+        temperature: 0.1,
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI");
+    
+    return JSON.parse(text);
+  } catch (error: any) {
+    console.error("Gemini Timing Refinement failed:", error);
+    return captionsToSync;
+  }
+};
