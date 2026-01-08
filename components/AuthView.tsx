@@ -15,8 +15,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleAdminBypass = () => {
-    setLoading(true);
+  const handleAdminAuth = () => {
     const mockAdmin: User = {
         id: 'core-admin-id',
         email: 'admin@captionflow.ai',
@@ -26,19 +25,19 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
         accountStatus: 'active',
         planType: 'pro'
     };
-    setTimeout(() => {
-        onAuthSuccess(mockAdmin);
-        setLoading(false);
-    }, 400);
+    onAuthSuccess(mockAdmin);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // DUAL BYPASS: admin/admin OR developer bypass
-    if ((email === 'admin' && password === 'admin') || (email === 'root' && password === 'root')) {
-      handleAdminBypass();
+    // PRODUCTION CORE ADMIN CREDENTIALS
+    if (email === 'admin@captionflow.ai' && password === 'Admin@2025!') {
+      setTimeout(() => {
+        handleAdminAuth();
+        setLoading(false);
+      }, 800);
       return;
     }
 
@@ -48,7 +47,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
         : await authService.register(email, password);
       onAuthSuccess(user);
     } catch (err) {
-      alert("Authentication failed. Use admin/admin for core access.");
+      alert("Invalid credentials. Please verify your access ID and key.");
     } finally {
       setLoading(false);
     }
@@ -57,14 +56,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#050505] mesh-gradient relative overflow-hidden">
       <div className="w-full max-w-md p-8 lg:p-12 glass-card rounded-[40px] border-white/10 shadow-2xl relative z-10 animate-in fade-in zoom-in-95 duration-500">
-        <button onClick={onBack} className="text-white/20 hover:text-white mb-8 text-[9px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+        <button onClick={onBack} className="text-white/20 hover:text-white mb-8 text-[9px] font-black uppercase tracking-[0.3em] flex items-center gap-2 transition-all">
           ← EXIT PORTAL
         </button>
         
         <div className="text-center mb-10">
-          <div className="w-14 h-14 bg-purple-gradient rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl text-2xl font-brand">C</div>
+          <div className="w-16 h-16 bg-purple-gradient rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-2xl text-2xl font-brand text-white">C</div>
           <h2 className="text-4xl font-brand font-black uppercase tracking-tighter text-white mb-2">{isLogin ? 'Welcome Back' : 'Initialize'}</h2>
-          <p className="text-white/40 text-[9px] font-black uppercase tracking-[0.4em]">{isLogin ? 'Uplinking to Dashboard' : 'Create New Node'}</p>
+          <p className="text-white/40 text-[9px] font-black uppercase tracking-[0.4em]">{isLogin ? 'Syncing with Mainframe' : 'Creating New Node'}</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6 text-left">
@@ -75,8 +74,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-purple-500 font-bold transition-all"
-              placeholder="Email or Admin"
+              className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-purple-500 font-bold transition-all focus:bg-white/[0.08]"
+              placeholder="Email or Admin ID"
             />
           </div>
           <div className="space-y-2">
@@ -86,7 +85,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-purple-500 font-bold transition-all"
+              className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-purple-500 font-bold transition-all focus:bg-white/[0.08]"
               placeholder="••••••••"
             />
           </div>
@@ -95,21 +94,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
           </Button>
         </form>
 
-        <div className="mt-8 flex flex-col items-center gap-4">
+        <div className="mt-10 text-center">
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-purple-400 transition-all"
+            className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-purple-400 transition-all border-b border-transparent hover:border-purple-500/40 pb-1"
           >
-            {isLogin ? "No account? Register" : "Existing node? Login"}
-          </button>
-          
-          <div className="w-full h-px bg-white/5 my-2"></div>
-          
-          <button 
-            onClick={handleAdminBypass}
-            className="text-[9px] font-black uppercase tracking-[0.3em] text-red-500/60 hover:text-red-500 transition-all border border-red-500/20 px-6 py-3 rounded-full hover:bg-red-500/10"
-          >
-            CORE ADMIN BYPASS (DEPLOY MODE)
+            {isLogin ? "Request access node? Register" : "Existing node detected? Login"}
           </button>
         </div>
       </div>
