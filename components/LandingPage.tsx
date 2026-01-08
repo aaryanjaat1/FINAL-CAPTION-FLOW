@@ -28,7 +28,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     const key = await getApiKey();
     if (!key) {
       alert("Please enter your AI Key in the Dashboard first to use the Free Converter.");
-      onStart(); // Redirect to auth/portal
+      onStart();
       return;
     }
 
@@ -55,7 +55,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      const offset = 100; // Account for fixed navbar
+      const offset = 100;
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = el.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
@@ -71,13 +71,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   return (
     <div className="flex flex-col min-h-screen bg-[#050505] text-white overflow-hidden mesh-gradient font-sans">
       <nav className="fixed top-0 left-0 right-0 z-[100] px-6 py-8 flex justify-center pointer-events-none">
-        <div className={`w-full max-w-6xl glass-card rounded-[32px] px-8 py-4 flex items-center justify-between border-white/5 shadow-2xl transition-all duration-700 pointer-events-auto ${scrollY > 50 ? 'scale-95 bg-black/90 translate-y-2' : ''}`}>
+        <div className={`w-full max-w-6xl glass-card rounded-[32px] px-8 py-4 flex items-center justify-between border-white/5 shadow-2xl transition-all duration-700 pointer-events-auto ${scrollY > 50 ? 'scale-95 bg-black/80 translate-y-2' : ''}`}>
           <div className="text-2xl font-brand font-black flex items-center gap-3 tracking-tighter cursor-pointer" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
             <div className="w-10 h-10 bg-purple-gradient rounded-[14px] flex items-center justify-center shadow-lg shadow-purple-600/40 text-white">C</div>
             <span className="text-gradient hidden sm:block">CaptionFlow</span>
           </div>
           
-          <div className="flex gap-6 md:gap-12 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/40">
+          <div className="flex gap-6 md:gap-12 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
             <button onClick={() => scrollToSection('features')} className="hover:text-white transition-colors">Platform</button>
             <button onClick={() => scrollToSection('mockup')} className="hover:text-white transition-colors">Showcase</button>
             <button onClick={() => scrollToSection('pricing')} className="hover:text-white transition-colors">Pricing</button>
@@ -96,7 +96,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         <div className="animate-slide-up w-full max-w-7xl">
             <div className="inline-flex items-center gap-3 px-6 py-2.5 mb-12 text-[10px] font-black tracking-[0.4em] text-purple-400 bg-purple-500/10 rounded-full border border-purple-500/20 uppercase mx-auto">
                 <span className="flex h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7]"></span>
-                Trusted by 50,000+ Creators
+                Loved by 50,000+ Creators
             </div>
             
             <h1 className="text-6xl md:text-8xl lg:text-[11rem] font-brand font-black tracking-tighter mb-10 leading-[0.82] text-white">
@@ -104,7 +104,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <span className="text-gradient">YOUR VOICE.</span>
             </h1>
             
-            <p className="text-xl md:text-3xl text-white/40 mb-16 max-w-4xl mx-auto uppercase tracking-widest font-black leading-relaxed">
+            <p className="text-xl md:text-3xl text-white/40 mb-16 max-w-4xl mx-auto uppercase tracking-[0.15em] font-black leading-relaxed">
                 Stop the scroll with AI-powered captions designed for maximum retention. One click. Viral impact.
             </p>
             
@@ -121,7 +121,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         </div>
       </section>
 
-      <section className="py-20 border-y border-white/5 overflow-hidden bg-black/40 relative z-10">
+      <section className="py-24 border-y border-white/5 overflow-hidden bg-black/40 relative z-10">
         <div className="ticker-scroll">
             {[1,2].map(n => (
                 <div key={n} className="flex gap-24 px-12 items-center">
@@ -141,11 +141,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         
         <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-12">
           {[
-            { title: 'AI PHONEME SYNC', desc: 'Gemini 3 Pro scans audio to match every syllable. No manual editing required.', icon: '🎙️', color: 'from-blue-500/10 to-purple-500/10' },
-            { title: 'VIRAL PRESET ENGINE', desc: 'Apply styles from MrBeast, Hormozi, and top agencies in a single tap.', icon: '⚡', color: 'from-yellow-500/10 to-orange-500/10' },
-            { title: '4K LOSSLESS EXPORT', desc: 'Export high-bitrate videos optimized for social algorithms. 100% sharp.', icon: '🎞️', color: 'from-pink-500/10 to-red-500/10' }
+            { title: 'AI PHONEME SYNC', desc: 'Gemini 3 Pro scans audio to match every syllable. No manual editing required.', icon: '🎙️' },
+            { title: 'VIRAL PRESET ENGINE', desc: 'Apply styles from MrBeast, Hormozi, and top agencies in a single tap.', icon: '⚡' },
+            { title: '4K LOSSLESS EXPORT', desc: 'Export high-bitrate videos optimized for social algorithms. 100% sharp.', icon: '🎞️' }
           ].map((f, i) => (
-            <div key={i} className={`group glass-card p-16 rounded-[60px] border-white/10 hover:border-purple-500/40 transition-all flex flex-col items-start text-left bg-gradient-to-br ${f.color}`}>
+            <div key={i} className="group glass-card p-16 rounded-[60px] border-white/5 hover:border-purple-500/40 transition-all flex flex-col items-start text-left bg-white/[0.01] hover:shadow-[0_0_80px_rgba(168,85,247,0.1)] hover:-translate-y-2 duration-500">
               <span className="text-5xl mb-10 group-hover:scale-125 transition-transform duration-500">{f.icon}</span>
               <h3 className="text-2xl font-brand font-black uppercase mb-6 tracking-tighter text-white">{f.title}</h3>
               <p className="text-white/40 font-bold text-sm leading-relaxed tracking-wide uppercase">{f.desc}</p>
@@ -156,7 +156,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
       <section id="mockup" className="py-40 px-6 flex flex-col items-center z-10 scroll-mt-20">
         <div className="w-full max-w-6xl glass-card rounded-[80px] p-24 md:p-40 relative overflow-hidden text-center border-white/10 shadow-[0_0_100px_rgba(139,92,246,0.1)]">
-          <div className="absolute inset-0 bg-purple-gradient opacity-5"></div>
+          <div className="absolute inset-0 bg-purple-gradient opacity-[0.05]"></div>
           <span className="text-purple-400 text-[10px] font-black uppercase tracking-[0.6em] mb-12 block">GLOBAL CREATOR TOOL</span>
           <h2 className="text-5xl md:text-9xl font-brand font-black mb-16 tracking-tighter uppercase text-white leading-[0.85]">FREE AI<br />CONVERTER</h2>
           
@@ -183,29 +183,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         </div>
 
         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Free Plan */}
             <div className="glass-card p-16 rounded-[60px] border-white/5 bg-white/[0.01] flex flex-col items-start text-left hover:border-white/20 transition-all">
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Starter Pack</span>
                 <h3 className="text-4xl font-brand font-black text-white uppercase mb-8">FREE</h3>
                 <ul className="space-y-6 mb-12 flex-grow">
                     {['5 Credits / Month', 'Standard Templates', '720p Export', 'Community Support'].map(item => (
-                        <li key={item} className="flex items-center gap-4 text-sm font-bold text-white/40 tracking-wide uppercase">
-                            <span className="text-purple-500">✓</span> {item}
+                        <li key={item} className="flex items-center gap-4 text-sm font-bold text-white/30 tracking-wide uppercase">
+                            <span className="text-purple-600">✓</span> {item}
                         </li>
                     ))}
                 </ul>
                 <Button variant="outline" className="w-full py-6 rounded-3xl" onClick={onStart}>CHOOSE FREE</Button>
             </div>
 
-            {/* Pro Plan */}
-            <div className="glass-card p-16 rounded-[60px] border-purple-500/30 bg-purple-gradient/5 flex flex-col items-start text-left relative overflow-hidden group hover:border-purple-500 transition-all shadow-[0_0_50px_rgba(168,85,247,0.1)]">
-                <div className="absolute top-10 right-10 bg-purple-500 text-[8px] font-black text-white px-4 py-2 rounded-full uppercase tracking-widest">Most Popular</div>
+            <div className="glass-card p-16 rounded-[60px] border-purple-500/20 bg-purple-gradient/5 flex flex-col items-start text-left relative overflow-hidden group hover:border-purple-500 transition-all shadow-[0_0_80px_rgba(168,85,247,0.1)]">
+                <div className="absolute top-10 right-10 bg-purple-600 text-[8px] font-black text-white px-4 py-2 rounded-full uppercase tracking-widest">Most Popular</div>
                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-4">Professional Tier</span>
                 <h3 className="text-4xl font-brand font-black text-white uppercase mb-8">$29<span className="text-sm text-white/40">/MO</span></h3>
                 <ul className="space-y-6 mb-12 flex-grow">
                     {['Unlimited Credits', 'Viral Preset Engine', '4K Lossless Export', 'Priority AI Nodes', 'Custom Font Support'].map(item => (
                         <li key={item} className="flex items-center gap-4 text-sm font-bold text-white uppercase">
-                            <span className="text-purple-500">✓</span> {item}
+                            <span className="text-purple-600">✓</span> {item}
                         </li>
                     ))}
                 </ul>
@@ -216,8 +214,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       
       <footer className="py-40 px-8 bg-black/60 text-center border-t border-white/5">
         <div className="text-4xl font-brand font-black mb-12 tracking-tighter text-white opacity-20 uppercase">CaptionFlow</div>
-        <p className="text-white/10 text-[9px] font-black uppercase tracking-[0.5em] mb-8">Empowering the next generation of storytellers.</p>
-        <p className="text-white/5 text-[8px] font-black uppercase tracking-[0.5em]">© 2024 CAPTIONFLOW. ALL RIGHTS RESERVED.</p>
+        <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.5em] mb-8">Empowering the next generation of storytellers.</p>
+        <p className="text-white/10 text-[8px] font-black uppercase tracking-[0.5em]">© 2024 CAPTIONFLOW. ALL RIGHTS RESERVED.</p>
       </footer>
     </div>
   );

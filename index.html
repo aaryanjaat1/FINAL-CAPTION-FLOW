@@ -7,17 +7,10 @@
     <title>CaptionFlow - AI Viral Video Editor</title>
     <meta name="description" content="Transform your voice with AI-powered viral captions. One click, professional quality.">
     
-    <!-- Link to our custom styles -->
     <link rel="stylesheet" href="tailwind.css">
-
-    <!-- Tailwind Play CDN (Required for the dynamic utility classes used in the app) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
-      /**
-       * TAILWIND CONFIGURATION
-       * This activates the JIT engine and defines our custom design system
-       */
       tailwind.config = {
         theme: {
           extend: {
@@ -31,6 +24,10 @@
                 500: '#8b5cf6',
                 600: '#7c3aed',
                 900: '#4c1d95',
+              },
+              dark: {
+                900: '#000000',
+                800: '#050505',
               }
             },
             animation: {
@@ -63,11 +60,6 @@
     </script>
 
     <script>
-      /**
-       * SAFE BOOTSTRAP
-       * This ensures 'process.env' exists so the Gemini SDK and app logic 
-       * do not crash the browser on startup.
-       */
       window.process = window.process || { env: { API_KEY: "" } };
     </script>
 
@@ -87,7 +79,6 @@
 </head>
 <body class="antialiased overflow-x-hidden mesh-gradient bg-[#050505] text-white">
     <div id="root"></div>
-    <!-- Explicitly import the entry point as a module -->
     <script type="module" src="index.tsx"></script>
 </body>
 </html>

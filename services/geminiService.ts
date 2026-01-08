@@ -6,15 +6,19 @@ import { Caption, AIModel } from "../types";
  * AI KEY DISCOVERY SERVICE
  */
 export const getApiKey = async (): Promise<string> => {
-  // 1. Check Local Storage (Legacy/Immediate)
-  const storedKey = localStorage.getItem('CF_AI_KEY');
-  if (storedKey && storedKey.length > 10) return storedKey;
+  // 1. Check Platform Master Key (Set via Admin Dashboard)
+  const platformKey = localStorage.getItem('CF_PLATFORM_API_KEY');
+  if (platformKey && platformKey.length > 10) return platformKey;
 
-  // 2. Check Environment
+  // 2. Check Individual User Key (Set via User Settings)
+  const userKey = localStorage.getItem('CF_AI_KEY');
+  if (userKey && userKey.length > 10) return userKey;
+
+  // 3. Check Environment
   const envKey = process.env.API_KEY;
   if (envKey && envKey.length > 5) return envKey;
 
-  // 3. Check for Platform-Managed Key Selection
+  // 4. Check for Platform-Managed Key Selection
   const anyWin = window as any;
   if (anyWin.aistudio) {
     try {
@@ -24,6 +28,14 @@ export const getApiKey = async (): Promise<string> => {
   }
 
   return "";
+};
+
+export const savePlatformKey = (key: string) => {
+  if (key && key.startsWith('AIza')) {
+    localStorage.setItem('CF_PLATFORM_API_KEY', key);
+    return true;
+  }
+  return false;
 };
 
 export const saveApiKey = (key: string) => {
@@ -36,6 +48,7 @@ export const saveApiKey = (key: string) => {
 
 export const clearApiKey = () => {
   localStorage.removeItem('CF_AI_KEY');
+  localStorage.removeItem('CF_PLATFORM_API_KEY');
 };
 
 /**

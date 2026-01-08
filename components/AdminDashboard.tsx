@@ -4,7 +4,7 @@ import { User, SystemStats } from '../types';
 import { adminService } from '../services/adminService';
 import { Button } from './Button';
 import { FREE_TRIAL_LIMIT } from '../constants';
-import { testApiKey } from '../services/geminiService';
+import { testApiKey, savePlatformKey } from '../services/geminiService';
 
 interface AdminDashboardProps {
   user: User;
@@ -21,9 +21,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Master Key Management
-  const [masterKey, setMasterKey] = useState(localStorage.getItem('CF_ADMIN_MASTER_KEY') || '');
+  // Platform Master Key Management
+  const [masterKey, setMasterKey] = useState(localStorage.getItem('CF_PLATFORM_API_KEY') || '');
   const [isTestingMaster, setIsTestingMaster] = useState(false);
+  const [masterKeyStatus, setMasterKeyStatus] = useState<'idle' | 'active' | 'error'>(localStorage.getItem('CF_PLATFORM_API_KEY') ? 'active' : 'idle');
 
   useEffect(() => {
     const loadAdminData = async () => {
@@ -50,15 +51,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
     return () => clearInterval(interval);
   }, []);
 
-  const handleTestMaster = async () => {
+  const handleSetPlatformKey = async () => {
+    if (!masterKey.startsWith('AIza')) {
+      alert("Invalid format. Gemini keys usually start with 'AIza'");
+      return;
+    }
     setIsTestingMaster(true);
     const success = await testApiKey(masterKey);
     setIsTestingMaster(false);
+    
     if (success) {
-      localStorage.setItem('CF_ADMIN_MASTER_KEY', masterKey);
-      alert("Platform Master Key Validated & Cached.");
+      savePlatformKey(masterKey);
+      setMasterKeyStatus('active');
+      alert("GLOBAL ENGINE ACTIVATED. The app is now connected to your Gemini API key.");
     } else {
-      alert("Master Key Validation Failed.");
+      setMasterKeyStatus('error');
+      alert("CONNECTION FAILED. Please check the API key and ensure billing is active on Google Cloud Console.");
     }
   };
 
@@ -99,7 +107,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
             { id: 'overview', label: 'HUB', icon: '📊' },
             { id: 'users', label: 'USERS', icon: '👥' },
             { id: 'revenue', label: 'CASH', icon: '💰' },
-            { id: 'security', label: 'NODE OPS', icon: '🛡️' },
+            { id: 'security', label: 'GLOBAL ENGINE', icon: '🛡️' },
             { id: 'logs', label: 'LOGS', icon: '📄' }
           ].map(tab => (
             <button
@@ -194,24 +202,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onBack }) 
 
         {activeTab === 'security' && (
           <div className="space-y-12 animate-in fade-in duration-700 text-left">
-            <div className="glass-card p-12 rounded-[60px] border-white/5 bg-white/[0.01] max-w-4xl">
-              <h3 className="text-[12px] font-black uppercase tracking-[0.4em] text-red-500 mb-10">CORE PLATFORM KEY (GEMINI)</h3>
-              <p className="text-[10px] font-black uppercase text-white/30 mb-8 leading-relaxed max-w-xl">
-                This key is used for system-wide tests and as an optional fallback for high-priority node processing.
+            <div className="glass-card p-12 rounded-[60px] border-white/5 bg-white/[0.01] max-w-4xl relative overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-600/10 blur-[100px] rounded-full"></div>
+              <h3 className="text-[14px] font-brand font-black uppercase tracking-[0.4em] text-red-500 mb-10">MASTER PLATFORM CONNECTION</h3>
+              <p className="text-[11px] font-black uppercase text-white/40 mb-10 leading-relaxed max-w-xl">
+                Enter your Gemini API key here to connect the entire frontend. Once activated, all users without their own keys will automatically use this platform engine.
               </p>
               
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <div className="space-y-8 relative z-10">
+                <div className="flex flex-col sm:flex-row gap-6">
                   <input 
                     type="password"
-                    placeholder="PASTE MASTER KEY"
+                    placeholder="ENTER YOUR GEMINI API KEY (Starts with AIza...)"
                     value={masterKey}
-                    onChange={(e) => setMasterKey(e.target.value)}
-                    className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-8 py-5 font-black text-sm text-white outline-none focus:border-red-600/50"
+                    onChange={(e) => {
+                      setMasterKey(e.target.value);
+                      setMasterKeyStatus('idle');
+                    }}
+                    className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-10 py-6 font-black text-sm text-white outline-none focus:border-red-600/50 shadow-inner"
                   />
-                  <Button variant="danger" className="px-12 py-5" onClick={handleTestMaster} loading={isTestingMaster}>TEST & CACHE</Button>
+                  <Button 
+                    variant="danger" 
+                    glow 
+                    className="px-14 py-6 text-[11px] font-black" 
+                    onClick={handleSetPlatformKey} 
+                    loading={isTestingMaster}
+                  >
+                    CONNECT GLOBAL ENGINE
+                  </Button>
                 </div>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600 mt-4 italic">Security: Keys are encrypted in transit and only visible to L5 Admins.</p>
+                
+                <div className="flex items-center gap-6">
+                  <div className={`flex items-center gap-3 px-6 py-2 rounded-full border ${masterKeyStatus === 'active' ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-white/5 border-white/10 text-white/20'}`}>
+                    <span className={`w-2 h-2 rounded-full ${masterKeyStatus === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></span>
+                    <span className="text-[9px] font-black uppercase tracking-widest">
+                      {masterKeyStatus === 'active' ? 'ENGINE CONNECTED' : 'DISCONNECTED'}
+                    </span>
+                  </div>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-[9px] font-black uppercase text-red-500/60 hover:text-red-500 transition-colors">GET API KEY FROM GOOGLE AI STUDIO →</a>
+                </div>
               </div>
             </div>
 
