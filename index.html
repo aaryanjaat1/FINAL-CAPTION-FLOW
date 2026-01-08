@@ -16,6 +16,7 @@
           background-color: #050505;
           color: white;
           -webkit-font-smoothing: antialiased;
+          overflow-x: hidden;
         }
         .font-brand { font-family: 'Montserrat', sans-serif; }
         .font-display { font-family: 'Space Grotesk', sans-serif; }
@@ -36,24 +37,6 @@
           transform: translateY(-4px);
         }
 
-        .glass-overlay {
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(8px);
-        }
-
-        .purple-glow {
-          box-shadow: 0 0 30px var(--accent-glow);
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-        .bg-purple-gradient {
-          background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-        }
-
         .text-gradient {
           background: linear-gradient(to right, #fff, #a855f7);
           -webkit-background-clip: text;
@@ -66,27 +49,24 @@
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            position: relative;
         }
 
-        /* Entry Animations */
-        @keyframes pop {
-          0% { transform: scale(0.8); opacity: 0; }
-          60% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); }
+        .mesh-gradient::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 1;
         }
-        .animate-pop { animation: pop 0.2s ease-out forwards; }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
 
         @keyframes slideUp {
           from { transform: translateY(40px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
-        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-up { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         @keyframes float {
           0% { transform: translateY(0px); }
@@ -96,24 +76,46 @@
         .animate-float { animation: float 6s ease-in-out infinite; }
 
         .perspective-mockup {
-            perspective: 1500px;
+            perspective: 2000px;
         }
         .mockup-content {
-            transform: rotateX(15deg) rotateY(-10deg) rotateZ(2deg);
-            transition: transform 0.5s ease;
+            transform: rotateX(10deg) rotateY(-5deg);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (max-width: 768px) {
+            .mockup-content { transform: none !important; }
         }
         .perspective-mockup:hover .mockup-content {
-            transform: rotateX(5deg) rotateY(-2deg) rotateZ(0deg);
+            transform: rotateX(2deg) rotateY(-1deg);
         }
 
         .ticker-scroll {
             display: flex;
             width: fit-content;
-            animation: ticker 30s linear infinite;
+            animation: ticker 40s linear infinite;
         }
         @keyframes ticker {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
+        }
+
+        .glow-button {
+            position: relative;
+            overflow: hidden;
+        }
+        .glow-button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            transform: scale(0);
+            transition: transform 0.5s ease;
+        }
+        .glow-button:hover::after {
+            transform: scale(1);
         }
     </style>
 <script type="importmap">
