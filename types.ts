@@ -5,6 +5,7 @@ export interface User {
   isSubscribed: boolean;
   videosProcessed: number;
   isAdmin: boolean;
+  apiKey?: string;
   lastActive?: string;
   signupSource?: string;
   accountStatus: 'active' | 'banned' | 'suspended';

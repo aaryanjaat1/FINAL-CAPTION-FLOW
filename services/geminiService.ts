@@ -3,32 +3,58 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Caption, AIModel } from "../types";
 
 /**
- * PRODUCTION-READY KEY HANDLING
- * This function retrieves the best available API Key.
- * 1. Checks environment variables (Standard)
- * 2. Checks platform-managed keys (Managed hosting)
+ * AI KEY DISCOVERY SERVICE
  */
-const getApiKey = async (): Promise<string> => {
-  // 1. Check if key is in process.env
+export const getApiKey = async (): Promise<string> => {
+  // 1. Check Local Storage (Legacy/Immediate)
+  const storedKey = localStorage.getItem('CF_AI_KEY');
+  if (storedKey && storedKey.length > 10) return storedKey;
+
+  // 2. Check Environment
   const envKey = process.env.API_KEY;
   if (envKey && envKey.length > 5) return envKey;
 
-  // 2. Check for Platform-Managed Key Selection (window.aistudio)
+  // 3. Check for Platform-Managed Key Selection
   const anyWin = window as any;
   if (anyWin.aistudio) {
-    const hasKey = await anyWin.aistudio.hasSelectedApiKey();
-    if (!hasKey) {
-      try {
-        await anyWin.aistudio.openSelectKey();
-        // After dialog, process.env.API_KEY is usually updated by the platform
-        return process.env.API_KEY || "";
-      } catch (e) {
-        console.error("Key selection cancelled or failed");
-      }
-    }
+    try {
+      const hasKey = await anyWin.aistudio.hasSelectedApiKey();
+      if (hasKey) return process.env.API_KEY || "";
+    } catch (e) {}
   }
 
   return "";
+};
+
+export const saveApiKey = (key: string) => {
+  if (key && key.startsWith('AIza')) {
+    localStorage.setItem('CF_AI_KEY', key);
+    return true;
+  }
+  return false;
+};
+
+export const clearApiKey = () => {
+  localStorage.removeItem('CF_AI_KEY');
+};
+
+/**
+ * Validates the API key by performing a simple model query
+ */
+export const testApiKey = async (key: string): Promise<boolean> => {
+  if (!key || !key.startsWith('AIza')) return false;
+  try {
+    const ai = new GoogleGenAI({ apiKey: key });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: "Respond with 'ok' only.",
+      config: { maxOutputTokens: 5 }
+    });
+    return response.text?.toLowerCase().includes('ok') || false;
+  } catch (err) {
+    console.error("API Key Test Failed", err);
+    return false;
+  }
 };
 
 export const transcribeVideo = async (
@@ -39,13 +65,13 @@ export const transcribeVideo = async (
   const apiKey = await getApiKey();
   
   if (!apiKey) {
-    throw new Error("AI_OFFLINE: Please configure your Gemini API Key in the settings or environment.");
+    throw new Error("KEY_MISSING");
   }
 
   const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `Transcribe audio to ${settings.language} captions. 
-  Rules: Punchy segments (max 3 words), zero gaps, synced to millisecond.
+  Rules: Segments (max 3 words), zero gaps, synced to millisecond.
   Return JSON array only: [{"id": string, "startTime": number, "endTime": number, "text": string}]`;
 
   try {
@@ -79,12 +105,11 @@ export const transcribeVideo = async (
     return JSON.parse(response.text || "[]");
   } catch (error: any) {
     console.error("Transcription failed", error);
-    if (error.message?.includes("entity was not found")) {
-        // Platform specific error handling for expired/invalid keys
-        const anyWin = window as any;
-        if (anyWin.aistudio) await anyWin.aistudio.openSelectKey();
+    if (error.message?.includes("API key not valid")) {
+      clearApiKey();
+      throw new Error("KEY_INVALID");
     }
-    return [];
+    throw error;
   }
 };
 

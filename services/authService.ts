@@ -20,13 +20,13 @@ export const authService = {
     // Record activity
     await supabase.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', userId);
 
-    // Fix: Ensure all mandatory User properties are provided
     return {
       id: data.id,
       email: data.email,
       isSubscribed: data.is_subscribed,
       videosProcessed: data.videos_processed,
       isAdmin: data.role === 'admin',
+      apiKey: data.api_key,
       lastActive: data.last_active,
       signupSource: data.signup_source,
       accountStatus: data.account_status || 'active',
@@ -67,7 +67,8 @@ export const authService = {
       .from('profiles')
       .update({
         is_subscribed: user.isSubscribed,
-        videos_processed: user.videosProcessed
+        videos_processed: user.videosProcessed,
+        api_key: user.apiKey
       })
       .eq('id', user.id);
     
