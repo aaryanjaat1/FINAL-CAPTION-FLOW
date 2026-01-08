@@ -18,6 +18,11 @@ export interface Caption {
   text: string;
 }
 
+export interface CustomFont {
+  name: string;
+  url: string;
+}
+
 export interface VideoStyle {
   fontFamily: string;
   fontSize: number;
@@ -26,9 +31,11 @@ export interface VideoStyle {
   highlightColor: string;
   highlightStyle: 'background' | 'underline' | 'glow' | 'outline' | 'none';
   backgroundColor: string;
+  bgPadding: number;
+  textTransform: 'uppercase' | 'none' | 'lowercase';
   position: 'top' | 'middle' | 'bottom' | 'custom';
   layout: 'single' | 'double' | 'word' | 'phrase';
-  animation: 'pop' | 'fade' | 'slide' | 'bounce' | 'none';
+  animation: 'pop' | 'fade' | 'slide' | 'bounce' | 'zoomIn' | 'zoomOut' | 'shake' | 'none';
   shadow: boolean;
   stroke: boolean;
   strokeColor: string;
@@ -44,6 +51,7 @@ export interface Project {
   name: string;
   captions: Caption[];
   style: VideoStyle;
+  customFonts?: CustomFont[];
   thumbnail_url?: string;
   created_at: string;
 }

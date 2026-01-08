@@ -9,12 +9,14 @@ export const transcribeVideo = async (
 ): Promise<Caption[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  const prompt = `Transcribe the audio from this ${mimeType.includes('audio') ? 'audio' : 'video'} file into ${settings.language} captions. 
-  Follow these strict rules:
-  1. Break captions into small, punchy phrases.
-  2. Return ONLY a JSON array of objects.
-  3. Each object must have: "id" (string), "startTime" (number, seconds), "endTime" (number, seconds), and "text" (string).
-  4. Ensure timing is accurate to the speech.`;
+  const prompt = `Transcribe the audio from this file into ${settings.language} captions for viral social media content.
+  STRICT TIMING RULES:
+  1. MICRO-TIMING: Synchronize EVERY word to the exact millisecond of phonation. The "startTime" must be the absolute start of the first syllable, and "endTime" must be the absolute end of the last syllable.
+  2. GRANULARITY: Break captions into short, punchy segments (max 3 words). 
+  3. SEAMLESSNESS: Ensure ZERO gaps between consecutive captions unless there is a significant pause (>300ms) in speech.
+  4. ACCURACY: If the speaker talks fast, shorten the segments to maintain readability.
+  5. Return ONLY a JSON array of objects.
+  6. Format: [{"id": string, "startTime": number, "endTime": number, "text": string}]`;
 
   try {
     const response = await ai.models.generateContent({

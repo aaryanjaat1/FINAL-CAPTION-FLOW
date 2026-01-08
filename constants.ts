@@ -12,7 +12,6 @@ export const FONT_FAMILIES = [
   'Plus Jakarta Sans'
 ];
 
-// Added 'as const' to ensure literal types match the VideoStyle union type requirements
 export const CAPTION_TEMPLATES = [
   { 
     id: 'beast', 
@@ -25,6 +24,9 @@ export const CAPTION_TEMPLATES = [
       color: '#ffffff',
       highlightColor: '#facc15',
       highlightStyle: 'outline',
+      backgroundColor: 'transparent',
+      bgPadding: 0,
+      textTransform: 'uppercase',
       layout: 'word',
       animation: 'pop',
       shadow: true,
@@ -32,6 +34,50 @@ export const CAPTION_TEMPLATES = [
       strokeColor: '#000000',
       strokeWidth: 3,
       position: 'middle'
+    }
+  },
+  { 
+    id: 'strip', 
+    name: 'VIBRANT STRIP', 
+    code: 'VS',
+    style: {
+      fontFamily: 'Plus Jakarta Sans',
+      fontSize: 40,
+      fontWeight: '800',
+      color: '#ffffff',
+      highlightColor: '#ffffff',
+      highlightStyle: 'none',
+      backgroundColor: '#7c3aed',
+      bgPadding: 24,
+      textTransform: 'uppercase',
+      layout: 'phrase',
+      animation: 'slide',
+      shadow: false,
+      stroke: false,
+      position: 'middle'
+    }
+  },
+  { 
+    id: 'neon-v2', 
+    name: 'NEON PULSE', 
+    code: 'NP',
+    style: {
+      fontFamily: 'Space Grotesk',
+      fontSize: 44,
+      fontWeight: '700',
+      color: '#00ffff',
+      highlightColor: '#ff00ff',
+      highlightStyle: 'glow',
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      bgPadding: 12,
+      textTransform: 'uppercase',
+      layout: 'word',
+      animation: 'bounce',
+      shadow: false,
+      stroke: true,
+      strokeColor: '#000000',
+      strokeWidth: 1,
+      position: 'bottom'
     }
   },
   { 
@@ -45,6 +91,9 @@ export const CAPTION_TEMPLATES = [
       color: '#ffffff',
       highlightColor: '#ffffff',
       highlightStyle: 'underline',
+      backgroundColor: 'transparent',
+      bgPadding: 0,
+      textTransform: 'none',
       layout: 'double',
       animation: 'fade',
       shadow: false,
@@ -63,31 +112,14 @@ export const CAPTION_TEMPLATES = [
       color: '#ffffff',
       highlightColor: '#a855f7',
       highlightStyle: 'background',
+      backgroundColor: 'transparent',
+      bgPadding: 0,
+      textTransform: 'none',
       layout: 'phrase',
       animation: 'slide',
       shadow: true,
       stroke: false,
       position: 'bottom'
-    }
-  },
-  { 
-    id: 'neon', 
-    name: 'VIBE GLOW', 
-    code: 'VG',
-    style: {
-      fontFamily: 'Montserrat',
-      fontSize: 48,
-      fontWeight: '900',
-      color: '#ffffff',
-      highlightColor: '#ec4899',
-      highlightStyle: 'glow',
-      layout: 'word',
-      animation: 'bounce',
-      shadow: false,
-      stroke: true,
-      strokeColor: '#000000',
-      strokeWidth: 1,
-      position: 'middle'
     }
   }
 ] as const;
